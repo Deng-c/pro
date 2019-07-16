@@ -10,7 +10,7 @@ const session = require("express-session");
    user:"root",
    password:"",
    port:3306,
-   database:"xz",
+   database:"msj",
    connectionLimit:15
  })
  //2.2:跨域
@@ -31,7 +31,7 @@ server.use(express.static("public"))
 
  server.listen(3000);
 //3:完成第一个功能用户登录
-server.get("/login",(req,res)=>{
+/*server.get("/login",(req,res)=>{
   //1:参数
   var uname = req.query.uname;
   var upwd = req.query.upwd;
@@ -53,7 +53,9 @@ sql +=" AND upwd = md5(?)";
          res.send({code:1,msg:"登录成功"});
       }
   })
-})
+})*/
+// 3.完成轮播图插入
+
 //4:完成第二个功能:商品分页显示
 server.get("/product",(req,res)=>{
   //-参数
@@ -61,19 +63,16 @@ server.get("/product",(req,res)=>{
   var ps = req.query.pageSize;
   // -设置默认值
   if(!pno){pno=1}
-  if(!ps){ps=4}
+  if(!ps){ps=6}
   //-创建第一条 sql语句 当前页
   var obj = {code:1,msg:"查询成功"};
-  var sql = "SELECT lid,price";
-  sql+=" ,title,img_url";
-  sql+=" FROM xz_laptop";
-  sql+=" LIMIT ?,?";
+  var sql = "SELECT sid,img_url,title,subtitle,img_uname,uname FROM msj_laptop LIMIT ?,?";
   var off = (pno-1)*ps;
   ps = parseInt(ps);
   pool.query(sql,[off,ps],(err,result)=>{
       if(err)throw err;
       obj.data = result;
-      var sql = "SELECT count(*) AS c FROM xz_laptop";
+      var sql = "SELECT count(*) AS c FROM msj_laptop";
       pool.query(sql,(err,result)=>{
         if(err)throw err;
         var pc = Math.ceil(result[0].c/ps);
@@ -82,59 +81,103 @@ server.get("/product",(req,res)=>{
       })
   });
 });  
-
-//5:完成第三个功能:
-//92~106 复制
-//先登录操作成功后再查询购物车
-//查询指定用户购物车列表
-server.get("/cart",(req,res)=>{
-  //1:参数(无参数)
-  console.log(req.session.uid);
-  var uid = req.session.uid;
-  if(!uid){
-    res.send({code:-1,msg:"请登录"});
-    return;
-  }
-  //2:sql
-  var sql = "SELECT id,img_url,title,price,count FROM msj_laptop_carousel WHERE uid = ?";
-  pool.query(sql,[uid],(err,result)=>{
-    if(err)throw err;
-    res.send({code:1,data:result})
-  })
-  //3:json
-})
-
-// 功能4 删除购物车中商品
-server.get("/delItem",(req,res)=>{
-  // 1.参数购物车id
-  var id=req.query.id;
-  // 2.sql删除指定数据
-  var sql = "DELETE FROM xz_cart WHERE id = ?";
-  // 3：json
-  pool.query(sql,[id],(err,result)=>{
-    if(err) throw err;
-    console.log(result);
-    if(result.affectedRows>0){
-      res.send({code:1,msg:"删除成功"});
-    }else{
-      res.send({code:-1,msg:"删除失败"})
-    }
-  })
-})
-
-// 功能五删除多个选中商品
-server.get("/delAll",(req,res)=>{
-  // 1.参数 1,2,3
-  var ids = req.query.ids;
-  // 2.sql
-  var sql = `DELETE FROM xz_cart WHERE id IN (${ids})`;
-  // 3.json
-  pool.query(sql,(err,result)=>{
-    if(err) throw err;
-    if(result.affectedRow>0){
-      res.send({code:1,msg:"删除成功"});
-    }else{
-      res.send({code:-1,msg:"删除失败"});
-    }
-  })
-})
+// 5.第二个小页面
+server.get("/product_two",(req,res)=>{
+  //-参数
+  var pno = req.query.pno;
+  var ps = req.query.pageSize;
+  // -设置默认值
+  if(!pno){pno=1}
+  if(!ps){ps=6}
+  //-创建第一条 sql语句 当前页
+  var obj = {code:1,msg:"查询成功"};
+  var sql = "SELECT sid,img_url,title,subtitle,img_uname,uname FROM msj_laptop_two LIMIT ?,?";
+  var off = (pno-1)*ps;
+  ps = parseInt(ps);
+  pool.query(sql,[off,ps],(err,result)=>{
+      if(err)throw err;
+      obj.data = result;
+      var sql = "SELECT count(*) AS c FROM msj_laptop_two";
+      pool.query(sql,(err,result)=>{
+        if(err)throw err;
+        var pc = Math.ceil(result[0].c/ps);
+        obj.pc = pc;
+        res.send(obj);
+      })
+  });
+});  
+// 6.第三个小页面
+server.get("/product_tree",(req,res)=>{
+  //-参数
+  var pno = req.query.pno;
+  var ps = req.query.pageSize;
+  // -设置默认值
+  if(!pno){pno=1}
+  if(!ps){ps=6}
+  //-创建第一条 sql语句 当前页
+  var obj = {code:1,msg:"查询成功"};
+  var sql = "SELECT sid,img_url,title,subtitle,img_uname,uname FROM msj_laptop_tree LIMIT ?,?";
+  var off = (pno-1)*ps;
+  ps = parseInt(ps);
+  pool.query(sql,[off,ps],(err,result)=>{
+      if(err)throw err;
+      obj.data = result;
+      var sql = "SELECT count(*) AS c FROM msj_laptop_tree";
+      pool.query(sql,(err,result)=>{
+        if(err)throw err;
+        var pc = Math.ceil(result[0].c/ps);
+        obj.pc = pc;
+        res.send(obj);
+      })
+  });
+});  
+// 7.第四个小页面
+server.get("/product_four",(req,res)=>{
+  //-参数
+  var pno = req.query.pno;
+  var ps = req.query.pageSize;
+  // -设置默认值
+  if(!pno){pno=1}
+  if(!ps){ps=6}
+  //-创建第一条 sql语句 当前页
+  var obj = {code:1,msg:"查询成功"};
+  var sql = "SELECT sid,img_url,title,subtitle,img_uname,uname FROM msj_laptop_four LIMIT ?,?";
+  var off = (pno-1)*ps;
+  ps = parseInt(ps);
+  pool.query(sql,[off,ps],(err,result)=>{
+      if(err)throw err;
+      obj.data = result;
+      var sql = "SELECT count(*) AS c FROM msj_laptop_four";
+      pool.query(sql,(err,result)=>{
+        if(err)throw err;
+        var pc = Math.ceil(result[0].c/ps);
+        obj.pc = pc;
+        res.send(obj);
+      })
+  });
+}); 
+// 7.第四个小页面
+server.get("/product_five",(req,res)=>{
+  //-参数
+  var pno = req.query.pno;
+  var ps = req.query.pageSize;
+  // -设置默认值
+  if(!pno){pno=1}
+  if(!ps){ps=6}
+  //-创建第一条 sql语句 当前页
+  var obj = {code:1,msg:"查询成功"};
+  var sql = "SELECT sid,img_url,title,subtitle,img_uname,uname FROM msj_laptop_five LIMIT ?,?";
+  var off = (pno-1)*ps;
+  ps = parseInt(ps);
+  pool.query(sql,[off,ps],(err,result)=>{
+      if(err)throw err;
+      obj.data = result;
+      var sql = "SELECT count(*) AS c FROM msj_laptop_five";
+      pool.query(sql,(err,result)=>{
+        if(err)throw err;
+        var pc = Math.ceil(result[0].c/ps);
+        obj.pc = pc;
+        res.send(obj);
+      })
+  });
+}); 
